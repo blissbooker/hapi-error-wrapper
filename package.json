@@ -29,5 +29,8 @@
     "wrapper"
   ],
   "author": "Rui Quelhas <rui@alpha-iv.com>",
+  "contributors": [
+    "Filipe Pinheiro <filipe@alpha-iv.com>"
+  ],
   "license": "ISC"
 }
