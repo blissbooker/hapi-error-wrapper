@@ -16,7 +16,7 @@ var lab = exports.lab = Lab.script();
 
 lab.experiment('The server extension handles', function () {
 
-    var server, stub, spy;
+    var server, clientStub, notifySpy, exceptionSpy;
 
     var config = {
         airbrake: {
@@ -33,11 +33,15 @@ lab.experiment('The server extension handles', function () {
             notify: function (err, fn) {
                 Code.expect(err).to.exist();
                 Code.expect(fn).to.not.exist();
-            }
+            },
+
+            handleExceptions: function () {}
         };
 
-        stub = Sinon.stub(airbrake, 'createClient').returns(api);
-        spy = Sinon.spy(api, 'notify');
+        clientStub = Sinon.stub(airbrake, 'createClient').returns(api);
+
+        notifySpy = Sinon.spy(api, 'notify');
+        exceptionSpy = Sinon.spy(api, 'handleExceptions');
 
         server.route({
             path: '/validation',
@@ -89,8 +93,9 @@ lab.experiment('The server extension handles', function () {
 
     lab.after(function (done) {
 
-        spy.restore();
-        stub.restore();
+        exceptionSpy.restore();
+        notifySpy.restore();
+        clientStub.restore();
 
         return done();
     });
@@ -102,8 +107,9 @@ lab.experiment('The server extension handles', function () {
             server.inject('/validation', function (response) {
 
                 Code.expect(response.statusCode).to.equal(412);
-                Code.expect(stub.calledOnce).to.be.true();
-                Code.expect(spy.calledOnce).to.be.true();
+                Code.expect(clientStub.calledOnce).to.be.true();
+                Code.expect(notifySpy.calledOnce).to.be.true();
+                Code.expect(exceptionSpy.calledOnce).to.be.true();
 
                 return done();
             });
@@ -117,8 +123,9 @@ lab.experiment('The server extension handles', function () {
             server.inject('/native', function (response) {
 
                 Code.expect(response.statusCode).to.equal(410);
-                Code.expect(stub.calledOnce).to.be.true();
-                Code.expect(spy.calledOnce).to.be.true();
+                Code.expect(clientStub.calledOnce).to.be.true();
+                Code.expect(notifySpy.calledOnce).to.be.true();
+                Code.expect(exceptionSpy.calledOnce).to.be.true();
 
                 return done();
             });
@@ -132,8 +139,9 @@ lab.experiment('The server extension handles', function () {
             server.inject('/internal', function (response) {
 
                 Code.expect(response.statusCode).to.equal(500);
-                Code.expect(stub.calledOnce).to.be.true();
-                Code.expect(spy.calledOnce).to.be.true();
+                Code.expect(clientStub.calledOnce).to.be.true();
+                Code.expect(notifySpy.calledOnce).to.be.true();
+                Code.expect(exceptionSpy.calledOnce).to.be.true();
 
                 return done();
             });
@@ -147,8 +155,9 @@ lab.experiment('The server extension handles', function () {
             server.inject('/', function (response) {
 
                 Code.expect(response.statusCode).to.equal(200);
-                Code.expect(stub.calledOnce).to.be.true();
-                Code.expect(spy.calledOnce).to.be.true();
+                Code.expect(clientStub.calledOnce).to.be.true();
+                Code.expect(notifySpy.calledOnce).to.be.true();
+                Code.expect(exceptionSpy.calledOnce).to.be.true();
 
                 return done();
             });
