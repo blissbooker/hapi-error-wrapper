@@ -2,6 +2,8 @@
 
 Hapi.js plugin to wrap and track application errors.
 
+[![Build Status](https://travis-ci.org/blissbooker/hapi-error-wrapper.svg)](https://travis-ci.org/blissbooker/hapi-error-wrapper)
+
 ## Usage
 
 ```javascript
