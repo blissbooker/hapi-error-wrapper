@@ -82,9 +82,7 @@ lab.experiment('The server extension handles', function () {
                     return callback(null, false);
                 },
 
-                track: {
-                    airbrake: config.airbrake
-                }
+                track: config.airbrake
             }
         }, done);
     });

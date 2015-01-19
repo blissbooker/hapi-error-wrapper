@@ -26,10 +26,8 @@ server.register({
 
         // Track errors on an airbrake server
         track: {
-            airbrake: {
-                key: '<application_id>',
-                host: '<airbrake_server>'
-            }
+            key: '<application_id>',
+            host: '<airbrake_server>'
         }
     }
 }, function (err) {
