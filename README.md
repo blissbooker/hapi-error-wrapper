@@ -13,7 +13,7 @@ server.connection({ port: 1337 });
 
 server.register({
     plugin: plugin,
-    options: {
+    register: {
         // Wrap component-specific error
         // e.g. Mongoose Validation Errors
         wrap: function (error, callback) {
@@ -32,5 +32,7 @@ server.register({
             }
         }
     }
-}, done);
+}, function (err) {
+    // whatevs
+});
 ```
