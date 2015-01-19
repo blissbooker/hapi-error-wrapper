@@ -25,7 +25,7 @@ server.register({
         },
 
         // Track errors on an airbrake server
-        log: {
+        track: {
             airbrake: {
                 key: '<application_id>',
                 host: '<airbrake_server>'

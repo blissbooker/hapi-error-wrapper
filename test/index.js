@@ -82,7 +82,7 @@ lab.experiment('The server extension handles', function () {
                     return callback(null, false);
                 },
 
-                log: {
+                track: {
                     airbrake: config.airbrake
                 }
             }
@@ -99,7 +99,7 @@ lab.experiment('The server extension handles', function () {
 
     lab.experiment('for mongoose validation errors', function () {
 
-        lab.test('should return precondition failed error to the client and log to airbrake', function (done) {
+        lab.test('should return precondition failed error to the client and track on airbrake server', function (done) {
 
             server.inject('/validation', function (response) {
 
@@ -114,7 +114,7 @@ lab.experiment('The server extension handles', function () {
 
     lab.experiment('for expected application errors', function () {
 
-        lab.test('should return the specific error to the client and log to airbrake', function (done) {
+        lab.test('should return the specific error to the client and track on airbrake server', function (done) {
 
             server.inject('/native', function (response) {
 
@@ -129,7 +129,7 @@ lab.experiment('The server extension handles', function () {
 
     lab.experiment('for unexpected or internal server errors', function () {
 
-        lab.test('should return generic error to the client and log to airbrake', function (done) {
+        lab.test('should return generic error to the client and track on airbrake server', function (done) {
 
             server.inject('/internal', function (response) {
 
