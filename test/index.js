@@ -1,6 +1,7 @@
 'use strict';
 
 var Lab = require('lab');
+var Code = require('code');
 var Hapi = require('hapi');
 var Boom = require('boom');
 
@@ -10,7 +11,7 @@ var plugin = require('../');
 
 var lab = exports.lab = Lab.script();
 
-lab.experiment('Spike solution', function () {
+lab.experiment('The hapi-error-wrapper server extension', function () {
 
     var server;
 
@@ -64,7 +65,7 @@ lab.experiment('Spike solution', function () {
         }, done);
     });
 
-    lab.test('returns preconcondition error if there is a mongoose validation error', function (done) {
+    lab.test('should handle mongoose validation errors as a failed precondition', function (done) {
 
         var request = {
             url: '/validation',
@@ -72,13 +73,13 @@ lab.experiment('Spike solution', function () {
         };
 
         server.inject(request, function (response) {
-            Lab.expect(response.statusCode).to.equal(412);
+            Code.expect(response.statusCode).to.equal(412);
 
             return done();
         });
     });
 
-    lab.test('returns native application errors', function (done) {
+    lab.test('should handle expected application errors with the proper code', function (done) {
 
         var request = {
             url: '/native',
@@ -86,13 +87,13 @@ lab.experiment('Spike solution', function () {
         };
 
         server.inject(request, function (response) {
-            Lab.expect(response.statusCode).to.equal(410);
+            Code.expect(response.statusCode).to.equal(410);
 
             return done();
         });
     });
 
-    lab.test('returns other internal server errors', function (done) {
+    lab.test('should handle unexpected or internal server errors', function (done) {
 
         var request = {
             url: '/internal',
@@ -100,13 +101,13 @@ lab.experiment('Spike solution', function () {
         };
 
         server.inject(request, function (response) {
-            Lab.expect(response.statusCode).to.equal(500);
+            Code.expect(response.statusCode).to.equal(500);
 
             return done();
         });
     });
 
-    lab.test('returns result if there are no errors', function (done) {
+    lab.test('should return control to the server if there are no errors', function (done) {
 
         var request = {
             url: '/',
@@ -114,7 +115,7 @@ lab.experiment('Spike solution', function () {
         };
 
         server.inject(request, function (response) {
-            Lab.expect(response.statusCode).to.equal(200);
+            Code.expect(response.statusCode).to.equal(200);
 
             return done();
         });
