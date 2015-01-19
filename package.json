@@ -1,18 +1,21 @@
 {
   "name": "hapi-error-wrapper",
-  "version": "0.0.1",
-  "description": "Hapi.js plugin to wrap component-specific internal server errors.",
+  "version": "0.1.0",
+  "description": "Hapi.js plugin to wrap and track application errors.",
   "main": "index.js",
   "directories": {
     "test": "test"
   },
   "dependencies": {
+    "airbrake": "blissbooker/node-airbrake",
     "boom": "^2.5.1"
   },
   "devDependencies": {
+    "code": "^1.2.1",
     "hapi": "^7.0.0",
     "lab": "^4.6.2",
-    "mongoose": "^3.8.17"
+    "mongoose": "^3.8.17",
+    "sinon": "^1.12.2"
   },
   "scripts": {
     "test": "lab"
