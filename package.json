@@ -14,11 +14,12 @@
     "code": "^1.2.1",
     "hapi": "^7.0.0",
     "lab": "^4.6.2",
+    "libxmljs": "^0.13.0",
     "mongoose": "^3.8.17",
     "sinon": "^1.12.2"
   },
   "scripts": {
-    "test": "lab"
+    "test": "AIRBRAKE_SERVER=\"airbrake.host.com\" VAR_1=1 VAR_2=2 VAR_3=3 lab -e mock -I value"
   },
   "repository": {
     "type": "git",
