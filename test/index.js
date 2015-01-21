@@ -82,6 +82,7 @@ lab.experiment('The server extension handles', function () {
 
     lab.experiment('when there are errors', function () {
 
+        var mock;
         var path = '/notifier_api/v2/notices';
 
         var filter = function (hidden) {
@@ -101,14 +102,19 @@ lab.experiment('The server extension handles', function () {
             };
         };
 
+        lab.beforeEach(function (done) {
+
+            mock = nock(config.airbrake.host)
+                .filteringRequestBody(filter(config.airbrake.hidden))
+                .post(path, '*')
+                .reply(200);
+
+            return done();
+        });
+
         lab.experiment('for mongoose validation errors', function () {
 
             lab.test('should return precondition failed error to the client and track on airbrake server', function (done) {
-
-                var mock = nock(config.airbrake.host)
-                    .filteringRequestBody(filter(config.airbrake.hidden))
-                    .post(path, '*')
-                    .reply(200);
 
                 server.inject('/validation', function (response) {
 
@@ -124,11 +130,6 @@ lab.experiment('The server extension handles', function () {
 
             lab.test('should return the specific error to the client and track on airbrake server', function (done) {
 
-                var mock = nock(config.airbrake.host)
-                    .filteringRequestBody(filter(config.airbrake.hidden))
-                    .post(path, '*')
-                    .reply(200);
-
                 server.inject('/native', function (response) {
 
                     Code.expect(response.statusCode).to.equal(410);
@@ -142,11 +143,6 @@ lab.experiment('The server extension handles', function () {
         lab.experiment('for unexpected or internal server errors', function () {
 
             lab.test('should return generic error to the client and track on airbrake server', function (done) {
-
-                var mock = nock(config.airbrake.host)
-                    .filteringRequestBody(filter(config.airbrake.hidden))
-                    .post(path, '*')
-                    .reply(200);
 
                 server.inject('/internal', function (response) {
 
