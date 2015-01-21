@@ -19,7 +19,7 @@
     "nock": "^0.57.0"
   },
   "scripts": {
-    "test": "AIRBRAKE_SERVER=\"airbrake.host.com\" VAR_1=1 VAR_2=2 VAR_3=3 lab -e mock -I value"
+    "test": "AIRBRAKE_SERVER=\"airbrake.host.com\" VAR_1=1 VAR_2=2 VAR_3=3 lab -e mock -I value,Map,Intl,Set"
   },
   "repository": {
     "type": "git",
