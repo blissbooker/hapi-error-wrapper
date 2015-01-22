@@ -37,7 +37,8 @@ lab.experiment('The server extension handles', function () {
             }
         };
 
-        server = Hapi.createServer();
+        server = new Hapi.Server();
+        server.connection();
 
         server.route({
             path: '/validation',
@@ -71,8 +72,8 @@ lab.experiment('The server extension handles', function () {
             }
         });
 
-        server.pack.register({
-            plugin: plugin,
+        server.register({
+            register: plugin,
             options : {
                 wrap: function (error, callback) {
 
