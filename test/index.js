@@ -1,5 +1,13 @@
 'use strict';
 
+// This variable is required to mock the airbrake server
+process.env.AIRBRAKE_SERVER = 'airbrake.host.com';
+
+// Sample variables to test cgi-data filtering
+process.env.VAR_1 = 1;
+process.env.VAR_2 = 2;
+process.env.VAR_3 = 3;
+
 var Lab = require('lab');
 var Code = require('code');
 var Hapi = require('hapi');
@@ -69,10 +77,11 @@ lab.experiment('The server extension handles', function () {
                 wrap: function (error, callback) {
 
                     if (error instanceof ValidationError) {
-                        return callback(null, true, error);
+                        var wrapped = Boom.preconditionFailed(error.message);
+                        return callback(null, wrapped);
                     }
 
-                    return callback(null, false, error);
+                    return callback(null, error);
                 },
 
                 track: config.airbrake

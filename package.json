@@ -1,6 +1,6 @@
 {
   "name": "hapi-error-wrapper",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Hapi.js plugin to wrap and track application errors.",
   "main": "index.js",
   "directories": {
@@ -19,7 +19,7 @@
     "nock": "^0.57.0"
   },
   "scripts": {
-    "test": "AIRBRAKE_SERVER=\"airbrake.host.com\" VAR_1=1 VAR_2=2 VAR_3=3 lab -e mock -I value,Map,Intl,Set"
+    "test": "lab -e mock -I value,Map,Intl,Set"
   },
   "repository": {
     "type": "git",
