@@ -9,6 +9,10 @@ Hapi.js plugin to wrap and track application errors.
 
 ```javascript
 var Hapi = require('hapi');
+var Boom = require('boom');
+
+var ValidationError = require('mongoose/lib/error').ValidationError;
+
 var plugin = require('hapi-error-wrapper');
 
 var server = new Hapi.Server();
@@ -20,11 +24,13 @@ server.register({
         // Wrap component-specific error
         // e.g. Mongoose Validation Errors
         wrap: function (error, callback) {
+
             if (error instanceof ValidationError) {
-                return callback(null, true, error.message);
+                var wrapper = Boom.preconditionFailed(error.message);
+                return callback(null, wrapped);
             }
 
-            return callback(null, false);
+            return callback(null, error);
         },
 
         // Track errors on an airbrake server

@@ -1,12 +1,21 @@
 'use strict';
 
+// This variable is required to mock the airbrake server
+process.env.AIRBRAKE_SERVER = 'airbrake.host.com';
+
+// Sample variables to test cgi-data filtering
+process.env.VAR_1 = 1;
+process.env.VAR_2 = 2;
+process.env.VAR_3 = 3;
+
 var Lab = require('lab');
 var Code = require('code');
 var Hapi = require('hapi');
 var Boom = require('boom');
-var Sinon = require('sinon');
 
-var airbrake = require('airbrake');
+var libxmljs = require('libxmljs');
+
+var nock = require('nock');
 
 var ValidationError = require('mongoose/lib/error').ValidationError;
 
@@ -16,32 +25,20 @@ var lab = exports.lab = Lab.script();
 
 lab.experiment('The server extension handles', function () {
 
-    var server, clientStub, notifySpy, exceptionSpy;
-
-    var config = {
-        airbrake: {
-            host: 'http://127.0.0.1',
-            key: 'airbrake_key'
-        }
-    };
+    var server, config;
 
     lab.before(function (done) {
 
-        server = Hapi.createServer();
-
-        var api = {
-            notify: function (err, fn) {
-                Code.expect(err).to.exist();
-                Code.expect(fn).to.not.exist();
-            },
-
-            handleExceptions: function () {}
+        config = {
+            airbrake: {
+                host: 'http://airbrake.host.com',
+                key: 'airbrake_key',
+                hidden: ['VAR_1', 'VAR_2']
+            }
         };
 
-        clientStub = Sinon.stub(airbrake, 'createClient').returns(api);
-
-        notifySpy = Sinon.spy(api, 'notify');
-        exceptionSpy = Sinon.spy(api, 'handleExceptions');
+        server = new Hapi.Server();
+        server.connection();
 
         server.route({
             path: '/validation',
@@ -75,15 +72,17 @@ lab.experiment('The server extension handles', function () {
             }
         });
 
-        server.pack.register({
-            plugin: plugin,
+        server.register({
+            register: plugin,
             options : {
                 wrap: function (error, callback) {
+
                     if (error instanceof ValidationError) {
-                        return callback(null, true, error.message);
+                        var wrapped = Boom.preconditionFailed(error.message);
+                        return callback(null, wrapped);
                     }
 
-                    return callback(null, false);
+                    return callback(null, error);
                 },
 
                 track: config.airbrake
@@ -91,73 +90,88 @@ lab.experiment('The server extension handles', function () {
         }, done);
     });
 
-    lab.after(function (done) {
+    lab.experiment('when there are errors', function () {
 
-        exceptionSpy.restore();
-        notifySpy.restore();
-        clientStub.restore();
+        var mock;
+        var path = '/notifier_api/v2/notices';
 
-        return done();
-    });
+        var filter = function (hidden) {
 
-    lab.experiment('for mongoose validation errors', function () {
+            return function (payload) {
 
-        lab.test('should return precondition failed error to the client and track on airbrake server', function (done) {
+                var doc = libxmljs.parseXml(payload);
 
-            server.inject('/validation', function (response) {
+                var environment = doc.get('//cgi-data');
+                var variables = environment.childNodes().map(function (node) {
+                    return node.attr('key').value();
+                });
 
-                Code.expect(response.statusCode).to.equal(412);
-                Code.expect(clientStub.calledOnce).to.be.true();
-                Code.expect(notifySpy.calledOnce).to.be.true();
-                Code.expect(exceptionSpy.calledOnce).to.be.true();
+                Code.expect(variables).to.not.include(hidden);
 
-                return done();
+                return '*';
+            };
+        };
+
+        lab.beforeEach(function (done) {
+
+            mock = nock(config.airbrake.host)
+                .filteringRequestBody(filter(config.airbrake.hidden))
+                .post(path, '*')
+                .reply(200);
+
+            return done();
+        });
+
+        lab.experiment('for mongoose validation errors', function () {
+
+            lab.test('should return precondition failed error to the client and track on airbrake server', function (done) {
+
+                server.inject('/validation', function (response) {
+
+                    Code.expect(response.statusCode).to.equal(412);
+                    mock.done();
+
+                    return done();
+                });
+            });
+        });
+
+        lab.experiment('for expected application errors', function () {
+
+            lab.test('should return the specific error to the client and track on airbrake server', function (done) {
+
+                server.inject('/native', function (response) {
+
+                    Code.expect(response.statusCode).to.equal(410);
+                    mock.done();
+
+                    return done();
+                });
+            });
+        });
+
+        lab.experiment('for unexpected or internal server errors', function () {
+
+            lab.test('should return generic error to the client and track on airbrake server', function (done) {
+
+                server.inject('/internal', function (response) {
+
+                    Code.expect(response.statusCode).to.equal(500);
+                    mock.done();
+
+                    return done();
+                });
             });
         });
     });
 
-    lab.experiment('for expected application errors', function () {
-
-        lab.test('should return the specific error to the client and track on airbrake server', function (done) {
-
-            server.inject('/native', function (response) {
-
-                Code.expect(response.statusCode).to.equal(410);
-                Code.expect(clientStub.calledOnce).to.be.true();
-                Code.expect(notifySpy.calledOnce).to.be.true();
-                Code.expect(exceptionSpy.calledOnce).to.be.true();
-
-                return done();
-            });
-        });
-    });
-
-    lab.experiment('for unexpected or internal server errors', function () {
-
-        lab.test('should return generic error to the client and track on airbrake server', function (done) {
-
-            server.inject('/internal', function (response) {
-
-                Code.expect(response.statusCode).to.equal(500);
-                Code.expect(clientStub.calledOnce).to.be.true();
-                Code.expect(notifySpy.calledOnce).to.be.true();
-                Code.expect(exceptionSpy.calledOnce).to.be.true();
-
-                return done();
-            });
-        });
-    });
-
-    lab.experiment('for the case when there are no errors', function () {
+    lab.experiment('when there are no errors', function () {
 
         lab.test('should return control to the server', function (done) {
 
             server.inject('/', function (response) {
 
                 Code.expect(response.statusCode).to.equal(200);
-                Code.expect(clientStub.calledOnce).to.be.true();
-                Code.expect(notifySpy.calledOnce).to.be.true();
-                Code.expect(exceptionSpy.calledOnce).to.be.true();
 
                 return done();
             });
