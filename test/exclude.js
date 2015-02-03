@@ -17,6 +17,7 @@ var libxmljs = require('libxmljs');
 
 var nock = require('nock');
 
+var utils = require('./utils');
 var ValidationError = require('mongoose/lib/error').ValidationError;
 
 var plugin = require('../');
@@ -57,7 +58,7 @@ lab.experiment('The server extension, ignoring client issues', function () {
         });
 
         server.route({
-            path: '/internal',
+            path: '/internal/{param}',
             method: 'GET',
             handler: function (request, reply) {
                 return reply(Boom.internal());
@@ -95,23 +96,6 @@ lab.experiment('The server extension, ignoring client issues', function () {
         var mock;
         var path = '/notifier_api/v2/notices';
 
-        var filter = function (hidden) {
-
-            return function (payload) {
-
-                var doc = libxmljs.parseXml(payload);
-
-                var environment = doc.get('//cgi-data');
-                var variables = environment.childNodes().map(function (node) {
-                    return node.attr('key').value();
-                });
-
-                Code.expect(variables).to.not.include(hidden);
-
-                return '*';
-            };
-        };
-
         lab.experiment('for mongoose validation errors', function () {
 
             lab.test('should return precondition failed error to the client but not track on airbrake server', function (done) {
@@ -140,12 +124,19 @@ lab.experiment('The server extension, ignoring client issues', function () {
 
             lab.test('should return generic error to the client and track on airbrake server', function (done) {
 
-                mock = nock(config.airbrake.host)
-                    .filteringRequestBody(filter(config.airbrake.hidden))
+                var request = '/internal/value';
+
+                var expected = {
+                    endpoint: request,
+                    hidden: config.airbrake.hidden
+                };
+
+                var mock = nock(config.airbrake.host)
+                    .filteringRequestBody(utils.verify(expected))
                     .post(path, '*')
                     .reply(200);
 
-                server.inject('/internal', function (response) {
+                server.inject(request, function (response) {
 
                     Code.expect(response.statusCode).to.equal(500);
                     mock.done();

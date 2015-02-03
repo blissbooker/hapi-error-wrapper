@@ -17,6 +17,7 @@ var libxmljs = require('libxmljs');
 
 var nock = require('nock');
 
+var utils = require('./utils');
 var ValidationError = require('mongoose/lib/error').ValidationError;
 
 var plugin = require('../');
@@ -42,7 +43,7 @@ lab.experiment('The server extension, considering client issues', function () {
         server.connection();
 
         server.route({
-            path: '/validation',
+            path: '/validation/{param}',
             method: 'GET',
             handler: function (request, reply) {
                 return reply(new ValidationError({}));
@@ -50,7 +51,7 @@ lab.experiment('The server extension, considering client issues', function () {
         });
 
         server.route({
-            path: '/native',
+            path: '/native/{param}',
             method: 'GET',
             handler: function (request, reply) {
                 return reply(Boom.resourceGone());
@@ -58,7 +59,7 @@ lab.experiment('The server extension, considering client issues', function () {
         });
 
         server.route({
-            path: '/internal',
+            path: '/internal/{param}',
             method: 'GET',
             handler: function (request, reply) {
                 return reply(Boom.internal());
@@ -96,27 +97,9 @@ lab.experiment('The server extension, considering client issues', function () {
         var mock;
         var path = '/notifier_api/v2/notices';
 
-        var filter = function (hidden) {
-
-            return function (payload) {
-
-                var doc = libxmljs.parseXml(payload);
-
-                var environment = doc.get('//cgi-data');
-                var variables = environment.childNodes().map(function (node) {
-                    return node.attr('key').value();
-                });
-
-                Code.expect(variables).to.not.include(hidden);
-
-                return '*';
-            };
-        };
-
         lab.beforeEach(function (done) {
 
             mock = nock(config.airbrake.host)
-                .filteringRequestBody(filter(config.airbrake.hidden))
                 .post(path, '*')
                 .reply(200);
 
@@ -127,7 +110,15 @@ lab.experiment('The server extension, considering client issues', function () {
 
             lab.test('should return precondition failed error to the client and track on airbrake server', function (done) {
 
-                server.inject('/validation', function (response) {
+                var request = '/validation/value';
+                var expected = {
+                    endpoint: request,
+                    hidden: config.airbrake.hidden
+                };
+
+                mock.filteringRequestBody(utils.verify(expected))
+
+                server.inject(request, function (response) {
 
                     Code.expect(response.statusCode).to.equal(412);
                     mock.done();
@@ -141,7 +132,15 @@ lab.experiment('The server extension, considering client issues', function () {
 
             lab.test('should return the specific error to the client and track on airbrake server', function (done) {
 
-                server.inject('/native', function (response) {
+                var request = '/native/value';
+                var expected = {
+                    endpoint: request,
+                    hidden: config.airbrake.hidden
+                };
+
+                mock.filteringRequestBody(utils.verify(expected))
+
+                server.inject(request, function (response) {
 
                     Code.expect(response.statusCode).to.equal(410);
                     mock.done();
@@ -155,7 +154,15 @@ lab.experiment('The server extension, considering client issues', function () {
 
             lab.test('should return generic error to the client and track on airbrake server', function (done) {
 
-                server.inject('/internal', function (response) {
+                var request = '/internal/value';
+                var expected = {
+                    endpoint: request,
+                    hidden: config.airbrake.hidden
+                };
+
+                mock.filteringRequestBody(utils.verify(expected))
+
+                server.inject(request, function (response) {
 
                     Code.expect(response.statusCode).to.equal(500);
                     mock.done();
