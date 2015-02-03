@@ -23,7 +23,7 @@ var plugin = require('../');
 
 var lab = exports.lab = Lab.script();
 
-lab.experiment('The server extension handles', function () {
+lab.experiment('The server extension, considering client issues', function () {
 
     var server, config;
 
@@ -33,7 +33,8 @@ lab.experiment('The server extension handles', function () {
             airbrake: {
                 host: 'http://airbrake.host.com',
                 key: 'airbrake_key',
-                hidden: ['VAR_1', 'VAR_2']
+                hidden: ['VAR_1', 'VAR_2'],
+                clientErrors: true
             }
         };
 
