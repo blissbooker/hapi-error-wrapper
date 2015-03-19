@@ -10,6 +10,7 @@ var lab = exports.lab = Lab.script();
 lab.experiment('register plugin', function () {
 
     var server, config;
+
     lab.before(function (done) {
 
         server = new Hapi.Server();

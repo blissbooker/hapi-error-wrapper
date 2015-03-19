@@ -30,6 +30,8 @@ lab.experiment('The server extension, considering client issues', function () {
 
     lab.before(function (done) {
 
+        // nock.enableNetConnect();
+
         config = {
             airbrake: {
                 host: 'http://airbrake.host.com',
@@ -90,6 +92,12 @@ lab.experiment('The server extension, considering client issues', function () {
                 track: config.airbrake
             }
         }, done);
+    });
+
+    lab.afterEach(function (done) {
+
+        nock.cleanAll();
+        return done();
     });
 
     lab.experiment('when there are errors', function () {

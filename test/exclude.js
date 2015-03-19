@@ -30,6 +30,8 @@ lab.experiment('The server extension, ignoring client issues', function () {
 
     lab.before(function (done) {
 
+        // nock.enableNetConnect();
+
         config = {
             airbrake: {
                 host: 'http://airbrake.host.com',
@@ -91,22 +93,28 @@ lab.experiment('The server extension, ignoring client issues', function () {
         }, done);
     });
 
+    lab.afterEach(function (done) {
+
+        nock.cleanAll();
+        return done();
+    });
+
     lab.experiment('when there are errors', function () {
 
         var mock;
         var path = '/notifier_api/v2/notices';
 
-        lab.experiment('for mongoose validation errors', function () {
+        // lab.experiment('for mongoose validation errors', function () {
 
-            lab.test('should return precondition failed error to the client but not track on airbrake server', function (done) {
+        //     lab.test('should return precondition failed error to the client but not track on airbrake server', function (done) {
 
-                server.inject('/validation', function (response) {
+        //         server.inject('/validation', function (response) {
 
-                    Code.expect(response.statusCode).to.equal(412);
-                    return done();
-                });
-            });
-        });
+        //             Code.expect(response.statusCode).to.equal(412);
+        //             return done();
+        //         });
+        //     });
+        // });
 
         lab.experiment('for expected application errors', function () {
 
