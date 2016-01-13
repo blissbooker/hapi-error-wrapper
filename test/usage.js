@@ -1,7 +1,6 @@
 'use strict';
 
 var Lab = require('lab');
-var Code = require('code');
 var Hapi = require('hapi');
 var Boom = require('boom');
 
@@ -9,7 +8,7 @@ var plugin = require('../');
 var lab = exports.lab = Lab.script();
 lab.experiment('register plugin', function () {
 
-    var server, config;
+    var server;
 
     lab.before(function (done) {
 
@@ -40,13 +39,4 @@ lab.experiment('register plugin', function () {
         }, done);
     });
 
-    lab.test('without errbit component works', function (done) {
-
-        var request = '/';
-        server.inject(request, function (response) {
-
-            Code.expect(response.statusCode).to.equal(412);
-            return done();
-        });
-    });
 });
