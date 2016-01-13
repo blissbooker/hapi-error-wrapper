@@ -8,7 +8,6 @@
     "test": "test"
   },
   "dependencies": {
-    "airbrake": "blissbooker/node-airbrake",
     "boom": "^2.6.1"
   },
   "devDependencies": {
